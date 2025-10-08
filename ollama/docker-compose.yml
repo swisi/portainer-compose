@@ -30,18 +30,22 @@ services:
     command: >
       sh -lc '
         set -e;
+        # Warte, bis die API wirklich antwortet
+        for i in $(seq 1 30); do
+          if curl -fsS http://ollama:11434/api/version >/dev/null; then break; fi;
+          echo "Warte auf Ollama... ($i/30)"; sleep 2;
+        done;
         for m in
           "llama3.1:8b-instruct-q4_K_M"
           "qwen2.5-coder:7b-instruct-q4_K_M"
           "nomic-embed-text"
         ; do
           echo "Pulling $m";
-          curl -sS -X POST http://ollama:11434/api/pull
-            -H "Content-Type: application/json"
-            -d "{\"name\":\"$m\"}" || exit 1;
+          curl -sS -X POST http://ollama:11434/api/pull \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"$m\"}";
           echo; echo "Done: $m";
         done
-      '
 
   openwebui:
     image: ghcr.io/open-webui/open-webui:latest
