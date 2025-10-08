@@ -11,17 +11,16 @@ services:
     expose:
       - "11434"
 
-  openwebui:
-    image: ghcr.io/open-webui/open-webui:latest
-    container_name: openwebui
-    restart: unless-stopped
-    depends_on:
-      - ollama
-    environment:
-      - OLLAMA_API_BASE_URL=http://ollama:11434
-      - WEBUI_AUTH=true            # oder via Cloudflare Access schützen
-    expose:
-      - "8080"
+openwebui:
+  image: ghcr.io/open-webui/open-webui:latest
+  restart: unless-stopped
+  depends_on:
+    - ollama
+  environment:
+    - OLLAMA_API_BASE_URL=http://ollama:11434
+    - WEBUI_AUTH=true
+  ports:
+    - "8080:8080"   # <— statt expose
 
   cloudflared:
     image: cloudflare/cloudflared:latest
