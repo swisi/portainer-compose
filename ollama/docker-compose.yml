@@ -5,13 +5,16 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
-    command: ["serve", "--host", "0.0.0.0"]   # Host explizit NUR fürs Serve-Kommando
+    environment:
+      - OLLAMA_HOST=0.0.0.0      # nur fürs Server-Binding
+      - OLLAMA_DEBUG=INFO
     volumes:
       - ollama_data:/root/.ollama
     ports:
       - "11434:11434"
     healthcheck:
-      test: ["CMD", "ollama", "list"]         # CLI nimmt Default 127.0.0.1 → ok
+      # WICHTIG: OLLAMA_HOST für den Check ausblenden (sonst versucht die CLI 0.0.0.0)
+      test: ["CMD-SHELL", "env -u OLLAMA_HOST ollama list >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 30
