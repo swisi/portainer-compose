@@ -6,46 +6,50 @@ services:
     container_name: ollama
     restart: unless-stopped
     environment:
-      - OLLAMA_HOST=0.0.0.0      # nur fürs Server-Binding
+      # Server soll auf allen Interfaces lauschen (für OpenWebUI/Cloudflared)
+      - OLLAMA_HOST=0.0.0.0
       - OLLAMA_DEBUG=INFO
     volumes:
       - ollama_data:/root/.ollama
+    # Für lokalen Zugriff direkt am Host. Wenn du NUR via Cloudflared gehst, kannst du das entfernen.
     ports:
       - "11434:11434"
     healthcheck:
-      # WICHTIG: OLLAMA_HOST für den Check ausblenden (sonst versucht die CLI 0.0.0.0)
+      # WICHTIG: OLLAMA_HOST im Check ausblenden, damit die CLI 127.0.0.1 nutzt
       test: ["CMD-SHELL", "env -u OLLAMA_HOST ollama list >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 30
       start_period: 120s
 
-  # Lädt gewünschte Modelle einmalig per API (nachdem Ollama healthy ist)
+  # Einmal-Job: lädt gewünschte Modelle via Ollama-CLI, sobald Ollama healthy ist
   ollama-init:
-    image: curlimages/curl:8.10.1
+    image: ollama/ollama:latest
+    container_name: ollama-init
     depends_on:
       ollama:
         condition: service_healthy
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    entrypoint: ["/bin/sh","-lc"]
+    command: |
+      set -e
+      # Warten bis die API wirklich antwortet
+      for i in $(seq 1 60); do
+        if ollama version >/dev/null 2>&1; then break; fi
+        echo "Warte auf Ollama... ($i/60)"; sleep 2
+      done
+      # Wunsch-Modelle vorladen (Liste hier anpassen)
+      for m in \
+        "llama3.1:8b-instruct-q4_K_M" \
+        "qwen2.5-coder:7b-instruct-q4_K_M" \
+        "nomic-embed-text"
+      do
+        echo "Pulling $m"
+        ollama pull "$m"
+        echo "Done: $m"
+      done
     restart: "no"
-    command: >
-      sh -lc '
-        set -e;
-        # Warte, bis die API wirklich antwortet
-        for i in $(seq 1 30); do
-          if curl -fsS http://ollama:11434/api/version >/dev/null; then break; fi;
-          echo "Warte auf Ollama... ($i/30)"; sleep 2;
-        done;
-        for m in
-          "llama3.1:8b-instruct-q4_K_M"
-          "qwen2.5-coder:7b-instruct-q4_K_M"
-          "nomic-embed-text"
-        ; do
-          echo "Pulling $m";
-          curl -sS -X POST http://ollama:11434/api/pull \
-            -H "Content-Type: application/json" \
-            -d "{\"name\":\"$m\"}";
-          echo; echo "Done: $m";
-        done
 
   openwebui:
     image: ghcr.io/open-webui/open-webui:latest
@@ -63,20 +67,21 @@ services:
       - WEBUI_AUTH=${WEBUI_AUTH:-true}
     volumes:
       - openwebui_data:/app/backend/data
+    # Für lokalen Zugriff. Wenn du ausschliesslich über Cloudflared gehst, weglassen.
     ports:
-      - "8080:8080"   # für lokalen Zugriff; weglassen, wenn NUR via Cloudflared
+      - "8080:8080"
 
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     restart: unless-stopped
-    # Metrics aktivieren → /ready Healthcheck; ICMP deaktivieren (spart Warnungen/Rechte)
+    # Metrics aktivieren (für Healthcheck) und ICMP deaktivieren (spart Warnungen/Rechte)
     command: tunnel --no-autoupdate --metrics 0.0.0.0:2000 --no-icmp run --token ${CF_TUNNEL_TOKEN}
     depends_on:
       - ollama
       - openwebui
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2000/ready"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:2000/ready >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 10
