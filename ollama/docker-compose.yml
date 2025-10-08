@@ -8,8 +8,8 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     # intern erreichbar, Ports optional NICHT mehr nach aussen publishen
-    expose:
-      - "11434"
+    ports:
+      - "11434:11434"
 
   openwebui:
     image: ghcr.io/open-webui/open-webui:latest
