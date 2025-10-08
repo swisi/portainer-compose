@@ -11,7 +11,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     ports:
-      - "11434:11434"   # falls du lokal testen willst; mit Cloudflared kannst du es auch entfernen
+      - "11434:11434"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:11434/api/tags"]
       interval: 10s
