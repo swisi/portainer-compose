@@ -31,8 +31,7 @@ services:
         condition: service_healthy
     environment:
       - OLLAMA_API_BASE_URL=http://ollama:11434
-      - OPENWEBUI_ADMIN_EMAIL=${OPENWEBUI_ADMIN_EMAIL}
-      - OPENWEBUI_ADMIN_PASSWORD=${OPENWEBUI_ADMIN_PASSWORD}
+      - OLLAMA_BASE_URL=http://ollama:11434
       - WEBUI_AUTH=${WEBUI_AUTH:-true}
     volumes:
       - openwebui_data:/app/backend/data
