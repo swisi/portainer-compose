@@ -13,7 +13,7 @@ services:
     ports:
       - "11434:11434"
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:11434/api/tags"]
+      test: ["CMD", "ollama", "--host", "127.0.0.1:11434", "list"]
       interval: 10s
       timeout: 3s
       retries: 30
