@@ -8,7 +8,7 @@ services:
       - TRILIUM_DATA_DIR=/home/node/trilium-data
       - TZ=Europe/Zurich
     ports:
-      - "8080:8080"
+      - "8085:8080"
     volumes:
       - trilium-data:/home/node/trilium-data
 
