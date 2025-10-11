@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  trilium:
+    image: triliumnext/notes:latest   # besser: feste Version pinnen, z. B. v0.90.x
+    restart: unless-stopped
+    environment:
+      - TRILIUM_DATA_DIR=/home/node/trilium-data
+      - TZ=Europe/Zurich
+    ports:
+      - "8080:8080"
+    volumes:
+      - trilium-data:/home/node/trilium-data
+
+volumes:
+  trilium-data:
