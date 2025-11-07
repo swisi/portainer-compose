@@ -5,6 +5,7 @@ services:
     image: triliumnext/notes:latest   # besser: feste Version pinnen, z. B. v0.90.x
     restart: unless-stopped
     environment:
+      - NO_AUTHENTICATION=true
       - TRILIUM_DATA_DIR=/home/node/trilium-data
       - TZ=Europe/Zurich
     ports:
