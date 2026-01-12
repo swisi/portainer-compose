@@ -17,8 +17,6 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
       - n8n_files:/files
-    depends_on:
-      - ollama
     networks:
       - internal
 
