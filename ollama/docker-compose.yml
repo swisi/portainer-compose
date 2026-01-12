@@ -1,26 +1,20 @@
 version: "3.9"
-
 services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
     environment:
-      # Server soll auf allen Interfaces lauschen (für OpenWebUI/Cloudflared)
-      - OLLAMA_HOST=0.0.0.0
-      - OLLAMA_DEBUG=INFO
-      - OLLAMA_NUM_THREADS=8        # Threads pro Inferenz
-      - OLLAMA_NUM_PARALLEL=1       # gleichzeitige Requests (2 nur, wenn genug Kerne/RAM)
-      - OMP_NUM_THREADS=8           # (falls BLAS aktiv) Threads für BLAS
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_NUM_THREADS=8
+      - OLLAMA_NUM_PARALLEL=1
       - OLLAMA_VULKAN=1
       - OLLAMA_DEBUG=1
     volumes:
       - ollama_data:/root/.ollama
-    # Für lokalen Zugriff direkt am Host. Wenn du NUR via Cloudflared gehst, kannst du das entfernen.
     ports:
       - "11434:11434"
     healthcheck:
-      # WICHTIG: OLLAMA_HOST im Check ausblenden, damit die CLI 127.0.0.1 nutzt
       test: ["CMD-SHELL", "env -u OLLAMA_HOST ollama list >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 3s
@@ -35,15 +29,19 @@ services:
       ollama:
         condition: service_healthy
     environment:
-      - OLLAMA_API_BASE_URL=http://ollama:11434
       - OLLAMA_BASE_URL=http://ollama:11434
       - WEBUI_AUTH=${WEBUI_AUTH:-true}
-
+      - GLOBAL_LOG_LEVEL=DEBUG
     volumes:
       - openwebui_data:/app/backend/data
-    # Für lokalen Zugriff. Wenn du ausschliesslich über Cloudflared gehst, weglassen.
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 120s
 
 volumes:
   ollama_data:
