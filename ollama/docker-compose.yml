@@ -36,6 +36,8 @@ services:
       - OLLAMA_API_BASE_URL=http://ollama:11434
       - OLLAMA_BASE_URL=http://ollama:11434
       - WEBUI_AUTH=${WEBUI_AUTH:-true}
+      - OLLAMA_VULKAN=1
+      - OLLAMA_DEBUG=1
     volumes:
       - openwebui_data:/app/backend/data
     # Für lokalen Zugriff. Wenn du ausschliesslich über Cloudflared gehst, weglassen.
