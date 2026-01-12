@@ -12,6 +12,8 @@ services:
       - OLLAMA_NUM_THREADS=8        # Threads pro Inferenz
       - OLLAMA_NUM_PARALLEL=1       # gleichzeitige Requests (2 nur, wenn genug Kerne/RAM)
       - OMP_NUM_THREADS=8           # (falls BLAS aktiv) Threads für BLAS
+      - OLLAMA_VULKAN=1
+      - OLLAMA_DEBUG=1
     volumes:
       - ollama_data:/root/.ollama
     # Für lokalen Zugriff direkt am Host. Wenn du NUR via Cloudflared gehst, kannst du das entfernen.
@@ -36,8 +38,7 @@ services:
       - OLLAMA_API_BASE_URL=http://ollama:11434
       - OLLAMA_BASE_URL=http://ollama:11434
       - WEBUI_AUTH=${WEBUI_AUTH:-true}
-      - OLLAMA_VULKAN=1
-      - OLLAMA_DEBUG=1
+
     volumes:
       - openwebui_data:/app/backend/data
     # Für lokalen Zugriff. Wenn du ausschliesslich über Cloudflared gehst, weglassen.
