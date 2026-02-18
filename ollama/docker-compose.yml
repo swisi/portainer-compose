@@ -4,10 +4,10 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
-    devices:
-      - /dev/dri:/dev/dri
-    group_add:
-      - "108"   # render group im LXC (prüfen mit: getent group render)
+    #devices:
+    #  - /dev/dri:/dev/dri
+    #group_add:
+    #  - "108"   # render group im LXC (prüfen mit: getent group render)
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
       - OLLAMA_NUM_THREADS=12
@@ -15,8 +15,8 @@ services:
       - OLLAMA_MAX_LOADED_MODELS=1
       - OLLAMA_KEEP_ALIVE=10m
       - OLLAMA_DEBUG=1
-      - OLLAMA_VULKAN=1
-      - GGML_VK_VISIBLE_DEVICES=0
+      #- OLLAMA_VULKAN=1
+      #- GGML_VK_VISIBLE_DEVICES=0
     volumes:
       - ollama_data:/root/.ollama
     ports:
